@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' *; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+  <title>Electron Browser</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="browser-container">
+    <div class="navigation-bar">
+      <button id="back-btn" class="nav-button" title="Back">←</button>
+      <button id="forward-btn" class="nav-button" title="Forward">→</button>
+      <button id="reload-btn" class="nav-button" title="Reload">↻</button>
+      <input type="text" id="url-input" placeholder="Enter URL or search..." />
+      <button id="go-btn" class="nav-button">Go</button>
+      <button id="pom-btn" class="nav-button">POM</button>
+    </div>
+    <webview id="browser" src="https://www.google.com" style="width: 100%; height: calc(100% - 50px);"></webview>
+  </div>
+  
+  <!-- Custom Modal for displaying elements -->
+  <div id="elements-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Page Elements</h3>
+        <div class="modal-buttons">
+          <button id="copy-button" class="copy-button">Copy</button>
+          <button id="close-modal" class="close-button">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <pre id="elements-output"></pre>
+      </div>
+    </div>
+  </div>
+  
+  <script src="renderer.js"></script>
+</body>
+</html>

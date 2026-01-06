@@ -1,0 +1,16 @@
+{
+  "name": "electron-browser",
+  "version": "1.0.0",
+  "description": "Electron app with built-in browser",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev"
+  },
+  "keywords": ["electron", "browser"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}
