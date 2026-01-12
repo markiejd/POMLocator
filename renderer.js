@@ -6,6 +6,8 @@ const reloadBtn = document.getElementById('reload-btn');
 const goBtn = document.getElementById('go-btn');
 const pomBtn = document.getElementById('pom-btn');
 
+console.log('Buttons loaded:', { backBtn, forwardBtn, reloadBtn, goBtn, pomBtn });
+
 // Navigation functions
 function navigate(url) {
   if (!url) return;
@@ -166,7 +168,7 @@ pomBtn.addEventListener('click', async () => {
           const suffixes = ['button', 'input', 'link', 'field', 'control', 'element', 'text', 'submit', 'search', 'checkbox', 'radio'];
           for (let suffix of suffixes) {
             // Remove suffix at the end (with or without separators like - or _)
-            const regex = new RegExp(`[-_]?${suffix}$`, 'i');
+            const regex = new RegExp('[-_]?' + suffix + '$', 'i');
             name = name.replace(regex, '');
           }
           
@@ -284,11 +286,11 @@ pomBtn.addEventListener('click', async () => {
       message += atfLine + '\n';
       
       // If not using XPath, add XPath version as well
-      if// Convert any double quotes in XPath to single quotes
-        const xpathValue = el.xpath.replace(/"/g, "'");
-        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue
+      if (el.selector.type !== 'XPath' && el.xpath) {
         const xpathName = name + ' XPATH';
-        message += `Elements.Add("${xpathName}", By.XPath("${el.xpath}"));\n`;
+        // Convert any double quotes in XPath to single quotes
+        const xpathValue = el.xpath.replace(/"/g, "'");
+        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
       }
       
       message += '\n';
