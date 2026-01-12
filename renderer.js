@@ -284,11 +284,11 @@ pomBtn.addEventListener('click', async () => {
       message += atfLine + '\n';
       
       // If not using XPath, add XPath version as well
-      if// Convert any double quotes in XPath to single quotes
-        const xpathValue = el.xpath.replace(/"/g, "'");
-        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue
+      if (el.selector.type !== 'XPath' && el.xpath) {
         const xpathName = name + ' XPATH';
-        message += `Elements.Add("${xpathName}", By.XPath("${el.xpath}"));\n`;
+        // Convert any double quotes in XPath to single quotes
+        const xpathValue = el.xpath.replace(/"/g, "'");
+        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
       }
       
       message += '\n';
