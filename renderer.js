@@ -53,7 +53,7 @@ pomBtn.addEventListener('click', async () => {
         // Function to get XPath for an element
         function getXPath(element, skipId = false) {
           if (element.id && !skipId) {
-            return '//*[@id="' + element.id + '"]';
+            return "//*[@id='" + element.id + "']";
           }
           if (element === document.body) {
             return '/html/body';
@@ -160,7 +160,17 @@ pomBtn.addEventListener('click', async () => {
           }
           
           // Convert to lowercase
-          return name.toLowerCase() || 'element';
+          name = name.toLowerCase() || 'element';
+          
+          // Remove common element type suffixes
+          const suffixes = ['button', 'input', 'link', 'field', 'control', 'element', 'text', 'submit', 'search', 'checkbox', 'radio'];
+          for (let suffix of suffixes) {
+            // Remove suffix at the end (with or without separators like - or _)
+            const regex = new RegExp(`[-_]?${suffix}$`, 'i');
+            name = name.replace(regex, '');
+          }
+          
+          return name || 'element';
         }
         
         const elements = [];
@@ -265,14 +275,18 @@ pomBtn.addEventListener('click', async () => {
       } else if (el.selector.type === 'CssSelector') {
         atfLine = `Elements.Add("${name}", By.CssSelector("${el.selector.value}"));`;
       } else if (el.selector.type === 'XPath') {
-        atfLine = `Elements.Add("${name}", By.XPath("${el.selector.value}"));`;
+        // Convert any double quotes in XPath to single quotes
+        const xpathValue = el.selector.value.replace(/"/g, "'");
+        atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       }
       
       message += `// ${i + 1}. [${el.type}] "${el.text}"\n`;
       message += atfLine + '\n';
       
       // If not using XPath, add XPath version as well
-      if (el.selector.type !== 'XPath' && el.xpath) {
+      if// Convert any double quotes in XPath to single quotes
+        const xpathValue = el.xpath.replace(/"/g, "'");
+        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue
         const xpathName = name + ' XPATH';
         message += `Elements.Add("${xpathName}", By.XPath("${el.xpath}"));\n`;
       }
