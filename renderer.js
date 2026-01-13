@@ -249,9 +249,7 @@ pomBtn.addEventListener('click', async () => {
     `);
     
     // Format the message with ATF lines
-    let message = '// Elements found on page:\n\n';
-    message += '// Total: ' + result.length + ' elements\n\n';
-    message += '// ATF Element Definitions\n\n';
+    let message = '';
     
     const usedNames = new Map();
     
@@ -282,15 +280,15 @@ pomBtn.addEventListener('click', async () => {
         atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       }
       
-      message += `// ${i + 1}. [${el.type}] "${el.text}"\n`;
-      message += atfLine + '\n';
+      message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
+      message += `\t\t\t\t${atfLine}\n`;
       
       // If not using XPath, add XPath version as well
       if (el.selector.type !== 'XPath' && el.xpath) {
         const xpathName = name + ' XPATH';
         // Convert any double quotes in XPath to single quotes
         const xpathValue = el.xpath.replace(/"/g, "'");
-        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
+        message += `\t\t\t\tElements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
       }
       
       message += '\n';
@@ -441,9 +439,7 @@ xpathBtn.addEventListener('click', async () => {
     `);
     
     // Format the message with ATF lines (XPath only)
-    let message = '// Elements found on page:\n\n';
-    message += '// Total: ' + result.length + ' elements\n\n';
-    message += '// Full Absolute XPath Element Definitions\n\n';
+    let message = '';
     
     const usedNames = new Map();
     
@@ -462,8 +458,8 @@ xpathBtn.addEventListener('click', async () => {
       const xpathValue = el.xpath.replace(/"/g, "'");
       const atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       
-      message += `// ${i + 1}. [${el.type}] "${el.text}"\n`;
-      message += atfLine + '\n\n';
+      message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
+      message += `\t\t\t\t${atfLine}\n\n`;
     });
     
     // Show custom modal
