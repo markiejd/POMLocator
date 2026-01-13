@@ -151,6 +151,21 @@ webview {
   border-color: #27ae60;
 }
 
+.xpath-button {
+  padding: 6px 16px;
+  background-color: #f39c12;
+  color: white;
+  border: 1px solid #f39c12;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.xpath-button:hover {
+  background-color: #e67e22;
+}
+
 .close-button {
   background: none;
   border: none;

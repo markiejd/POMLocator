@@ -247,13 +247,29 @@ pomBtn.addEventListener('click', async () => {
         return elements;
       })()
     `);
-    
     // Format the message with ATF lines
-    let message = 'Elements found on page:\n\n';
-    message += 'Total: ' + result.length + ' elements\n\n';
-    message += '// ATF Element Definitions\n\n';
+    let message = '';
     
     const usedNames = new Map();
+    
+    // First pass: collect names and find max length
+    const tempNames = [];
+    result.forEach((el) => {
+      let name = el.name;
+      if (usedNames.has(name)) {
+        const count = usedNames.get(name) + 1;
+        usedNames.set(name, count);
+        name = name + count;
+      } else {
+        usedNames.set(name, 1);
+      }
+      tempNames.push(name);
+    });
+    
+    const maxNameLength = tempNames.length > 0 ? Math.max(...tempNames.map(n => n.length)) : 0;
+    
+    // Reset and do second pass with formatting
+    usedNames.clear();
     
     result.forEach((el, i) => {
       // Ensure unique names
@@ -282,21 +298,208 @@ pomBtn.addEventListener('click', async () => {
         atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       }
       
-      message += `// ${i + 1}. [${el.type}] "${el.text}"\n`;
-      message += atfLine + '\n';
+      // Pad the name with spaces to align By.XPath
+      const paddingNeeded = Math.max(0, maxNameLength - name.length);
+      const padding = ' '.repeat(paddingNeeded);
+      const alignedLine = atfLine.replace(`"${name}"`, `"${name}"${padding}`);
       
-      // If not using XPath, add XPath version as well
-      if (el.selector.type !== 'XPath' && el.xpath) {
-        const xpathName = name + ' XPATH';
-        // Convert any double quotes in XPath to single quotes
-        const xpathValue = el.xpath.replace(/"/g, "'");
-        message += `Elements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
-      }
-      
-      message += '\n';
+      message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
+      message += `\t\t\t\t${alignedLine}\n`;
     });
     
     // Show custom modal instead of alert
+    showModal(message);
+  } catch (error) {
+    alert('Error finding elements: ' + error.message);
+  }
+});
+
+// XPATH button - full absolute XPath for each element
+const xpathBtn = document.getElementById('xpath-button');
+
+xpathBtn.addEventListener('click', async () => {
+  try {
+    const result = await webview.executeJavaScript(`
+      (function() {
+        // Function to get full absolute XPath for an element (never using ID)
+        function getAbsoluteXPath(element) {
+          if (element === document.body) {
+            return '/html/body';
+          }
+          
+          let path = [];
+          let current = element;
+          
+          while (current && current.nodeType === 1) {
+            let index = 1;
+            let sibling = current.previousSibling;
+            
+            while (sibling) {
+              if (sibling.nodeType === 1 && sibling.tagName === current.tagName) {
+                index++;
+              }
+              sibling = sibling.previousSibling;
+            }
+            
+            let tagName = current.tagName.toLowerCase();
+            path.unshift(tagName + '[' + index + ']');
+            current = current.parentNode;
+          }
+          
+          return '/' + path.join('/');
+        }
+        
+        // Function to generate a clean variable name
+        function generateName(element, type) {
+          let name = '';
+          
+          // Prefer ID
+          if (element.id) {
+            name = element.id;
+          }
+          // Then name attribute
+          else if (element.name) {
+            name = element.name;
+          }
+          // Then text content (limited)
+          else if (element.textContent) {
+            name = element.textContent.trim().substring(0, 30).replace(/[^a-zA-Z0-9]/g, '');
+          }
+          // Then type-based name
+          else if (element.placeholder) {
+            name = element.placeholder.substring(0, 30).replace(/[^a-zA-Z0-9]/g, '');
+          }
+          
+          // Fallback to type + index
+          if (!name) {
+            name = type.replace(/[^a-zA-Z0-9]/g, '');
+          }
+          
+          // Convert to lowercase
+          name = name.toLowerCase() || 'element';
+          
+          // Remove common element type suffixes
+          const suffixes = ['button', 'input', 'link', 'field', 'control', 'element', 'text', 'submit', 'search', 'checkbox', 'radio'];
+          for (let suffix of suffixes) {
+            const regex = new RegExp('[-_]?' + suffix + '$', 'i');
+            name = name.replace(regex, '');
+          }
+          
+          return name || 'element';
+        }
+        
+        const elements = [];
+        
+        // Find all buttons
+        const buttons = document.querySelectorAll('button');
+        buttons.forEach((btn) => {
+          elements.push({
+            type: 'Button',
+            text: btn.textContent.trim().substring(0, 50) || btn.value || 'No text',
+            name: generateName(btn, 'Button'),
+            xpath: getAbsoluteXPath(btn)
+          });
+        });
+        
+        // Find all input fields
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach((input) => {
+          elements.push({
+            type: 'Input (' + (input.type || 'text') + ')',
+            text: input.placeholder || input.value || input.name || 'No text',
+            name: generateName(input, 'Input'),
+            xpath: getAbsoluteXPath(input)
+          });
+        });
+        
+        // Find all textareas
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach((ta) => {
+          elements.push({
+            type: 'Textarea',
+            text: ta.placeholder || ta.value || ta.name || 'No text',
+            name: generateName(ta, 'Textarea'),
+            xpath: getAbsoluteXPath(ta)
+          });
+        });
+        
+        // Find all links
+        const links = document.querySelectorAll('a');
+        links.forEach((link) => {
+          if (link.textContent.trim()) {
+            elements.push({
+              type: 'Link',
+              text: link.textContent.trim().substring(0, 50),
+              name: generateName(link, 'Link'),
+              xpath: getAbsoluteXPath(link)
+            });
+          }
+        });
+        
+        // Find all headings
+        const headings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        headings.forEach((h) => {
+          elements.push({
+            type: h.tagName,
+            text: h.textContent.trim().substring(0, 50),
+            name: generateName(h, h.tagName),
+            xpath: getAbsoluteXPath(h)
+          });
+        });
+        
+        return elements;
+      })()
+    `);
+    
+    // Format the message with ATF lines (XPath only)
+    let message = '';
+    
+    const usedNames = new Map();
+    
+    // First pass: collect names and find max length
+    const tempNames = [];
+    result.forEach((el) => {
+      let name = el.name;
+      if (usedNames.has(name)) {
+        const count = usedNames.get(name) + 1;
+        usedNames.set(name, count);
+        name = name + count;
+      } else {
+        usedNames.set(name, 1);
+      }
+      tempNames.push(name);
+    });
+    
+    const maxNameLength = tempNames.length > 0 ? Math.max(...tempNames.map(n => n.length)) : 0;
+    
+    // Reset and do second pass with formatting
+    usedNames.clear();
+    
+    result.forEach((el, i) => {
+      // Ensure unique names
+      let name = el.name;
+      if (usedNames.has(name)) {
+        const count = usedNames.get(name) + 1;
+        usedNames.set(name, count);
+        name = name + count;
+      } else {
+        usedNames.set(name, 1);
+      }
+      
+      // Generate ATF line with XPath only
+      const xpathValue = el.xpath.replace(/"/g, "'");
+      const atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
+      
+      // Pad the name with spaces to align By.XPath
+      const paddingNeeded = Math.max(0, maxNameLength - name.length);
+      const padding = ' '.repeat(paddingNeeded);
+      const alignedLine = atfLine.replace(`"${name}"`, `"${name}"${padding}`);
+      
+      message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
+      message += `\t\t\t\t${alignedLine}\n`;
+    });
+    
+    // Show custom modal
     showModal(message);
   } catch (error) {
     alert('Error finding elements: ' + error.message);
