@@ -247,11 +247,29 @@ pomBtn.addEventListener('click', async () => {
         return elements;
       })()
     `);
-    
     // Format the message with ATF lines
     let message = '';
     
     const usedNames = new Map();
+    
+    // First pass: collect names and find max length
+    const tempNames = [];
+    result.forEach((el) => {
+      let name = el.name;
+      if (usedNames.has(name)) {
+        const count = usedNames.get(name) + 1;
+        usedNames.set(name, count);
+        name = name + count;
+      } else {
+        usedNames.set(name, 1);
+      }
+      tempNames.push(name);
+    });
+    
+    const maxNameLength = tempNames.length > 0 ? Math.max(...tempNames.map(n => n.length)) : 0;
+    
+    // Reset and do second pass with formatting
+    usedNames.clear();
     
     result.forEach((el, i) => {
       // Ensure unique names
@@ -280,18 +298,13 @@ pomBtn.addEventListener('click', async () => {
         atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       }
       
+      // Pad the name with spaces to align By.XPath
+      const paddingNeeded = Math.max(0, maxNameLength - name.length);
+      const padding = ' '.repeat(paddingNeeded);
+      const alignedLine = atfLine.replace(`"${name}"`, `"${name}"${padding}`);
+      
       message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
-      message += `\t\t\t\t${atfLine}\n`;
-      
-      // If not using XPath, add XPath version as well
-      if (el.selector.type !== 'XPath' && el.xpath) {
-        const xpathName = name + ' XPATH';
-        // Convert any double quotes in XPath to single quotes
-        const xpathValue = el.xpath.replace(/"/g, "'");
-        message += `\t\t\t\tElements.Add("${xpathName}", By.XPath("${xpathValue}"));\n`;
-      }
-      
-      message += '\n';
+      message += `\t\t\t\t${alignedLine}\n`;
     });
     
     // Show custom modal instead of alert
@@ -443,6 +456,25 @@ xpathBtn.addEventListener('click', async () => {
     
     const usedNames = new Map();
     
+    // First pass: collect names and find max length
+    const tempNames = [];
+    result.forEach((el) => {
+      let name = el.name;
+      if (usedNames.has(name)) {
+        const count = usedNames.get(name) + 1;
+        usedNames.set(name, count);
+        name = name + count;
+      } else {
+        usedNames.set(name, 1);
+      }
+      tempNames.push(name);
+    });
+    
+    const maxNameLength = tempNames.length > 0 ? Math.max(...tempNames.map(n => n.length)) : 0;
+    
+    // Reset and do second pass with formatting
+    usedNames.clear();
+    
     result.forEach((el, i) => {
       // Ensure unique names
       let name = el.name;
@@ -458,8 +490,13 @@ xpathBtn.addEventListener('click', async () => {
       const xpathValue = el.xpath.replace(/"/g, "'");
       const atfLine = `Elements.Add("${name}", By.XPath("${xpathValue}"));`;
       
+      // Pad the name with spaces to align By.XPath
+      const paddingNeeded = Math.max(0, maxNameLength - name.length);
+      const padding = ' '.repeat(paddingNeeded);
+      const alignedLine = atfLine.replace(`"${name}"`, `"${name}"${padding}`);
+      
       message += `\t\t\t\t// ${i + 1}. [${el.type}] "${el.text}"\n`;
-      message += `\t\t\t\t${atfLine}\n\n`;
+      message += `\t\t\t\t${alignedLine}\n`;
     });
     
     // Show custom modal
